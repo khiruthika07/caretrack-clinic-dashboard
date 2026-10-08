@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}CareTrack · Appointments{% endblock %}
+{% block page_name %}Appointments{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div><div class="eyebrow">OPERATIONS · APPOINTMENTS</div><h1>Appointments</h1><p>Manage today's patient queue and schedules.</p></div>
+    <button class="primary-btn" onclick="openModal()">＋ New appointment</button>
+</div>
+
+<div class="toolbar panel">
+    <div class="search-box">⌕ <input id="searchInput" placeholder="Search patients, doctors or tokens..." oninput="filterRows()"></div>
+    <div class="filter-group">
+        <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
+        <button class="filter-btn" onclick="filterStatus('Waiting', this)">Waiting</button>
+        <button class="filter-btn" onclick="filterStatus('Upcoming', this)">Upcoming</button>
+        <button class="filter-btn" onclick="filterStatus('Completed', this)">Completed</button>
+    </div>
+</div>
+
+<section class="panel full-table">
+    <div class="panel-head"><div><span class="panel-kicker">LIVE SCHEDULE</span><h2>{{ appointments|length }} appointments today</h2></div><div class="live-pill"><i></i> Live queue</div></div>
+    <div class="table-wrap">
+        <table id="appointmentTable">
+            <thead><tr><th>TOKEN</th><th>PATIENT</th><th>DOCTOR</th><th>DEPARTMENT</th><th>TIME</th><th>STATUS</th><th>WAIT</th><th></th></tr></thead>
+            <tbody>
+            {% for a in appointments %}
+            <tr data-status="{{ a.status }}">
+                <td><span class="token">{{ a.token }}</span></td>
+                <td><div class="patient"><span class="patient-avatar avatar-{{ loop.index }}">{{ a.patient[0] }}</span><div><strong>{{ a.patient }}</strong><small>Patient</small></div></div></td>
+                <td><strong>{{ a.doctor }}</strong></td><td>{{ a.department }}</td><td><strong>{{ a.time }}</strong></td>
+                <td><span class="status {{ a.status|lower }}">{{ a.status }}</span></td><td>{{ a.wait_minutes }} min</td>
+                <td>
+                    <form method="POST" action="{{ url_for('update_status', appointment_id=a.id) }}" class="status-form">
+                        <select name="status" onchange="this.form.submit()">
+                            <option value="">Update</option><option>Waiting</option><option>Delayed</option><option>Upcoming</option><option>Completed</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="modal-backdrop" id="modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <span class="panel-kicker">NEW APPOINTMENT</span>
+        <h2>Schedule a patient</h2>
+        <p class="modal-copy">Add a new appointment to today's live queue.</p>
+        <form method="POST" action="{{ url_for('add_appointment') }}">
+            <label>Patient name<input name="patient" required placeholder="e.g. Priya Kumar"></label>
+            <div class="form-grid">
+                <label>Doctor<select name="doctor" required><option>Dr. Meera Shah</option><option>Dr. Arjun Rao</option><option>Dr. Priya Menon</option></select></label>
+                <label>Department<select name="department" required><option>Cardiology</option><option>General Medicine</option><option>Dermatology</option></select></label>
+            </div>
+            <label>Appointment time<input type="time" name="time" required></label>
+            <button class="primary-btn wide" type="submit">Create appointment →</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

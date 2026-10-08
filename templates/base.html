@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CareTrack{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="brand-mark"><span></span><span></span><span></span></div>
+            <div>
+                <strong>CareTrack</strong>
+                <small>Clinic Operations</small>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <span class="workspace-dot"></span>
+            <div><small>WORKSPACE</small><strong>CareTrack Clinic</strong></div>
+            <span class="chevron">⌄</span>
+        </div>
+
+        <nav>
+            <p class="nav-label">OVERVIEW</p>
+            <a class="{% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                <span class="nav-icon">⌂</span> Dashboard
+            </a>
+            <a class="{% if request.endpoint == 'appointments' %}active{% endif %}" href="{{ url_for('appointments') }}">
+                <span class="nav-icon">▣</span> Appointments <b class="nav-count">6</b>
+            </a>
+            <a href="#"><span class="nav-icon">♙</span> Patients</a>
+            <a href="#"><span class="nav-icon">✚</span> Doctors</a>
+
+            <p class="nav-label space-top">MANAGEMENT</p>
+            <a href="#"><span class="nav-icon">◫</span> Analytics</a>
+            <a href="#"><span class="nav-icon">◷</span> Activity</a>
+            <a href="#"><span class="nav-icon">⚙</span> Settings</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="help-card">
+                <div class="help-orb">?</div>
+                <strong>Need help?</strong>
+                <span>View the CareTrack guide</span>
+            </div>
+            <div class="user-mini">
+                <div class="avatar">KS</div>
+                <div><strong>Clinic Admin</strong><span>Administrator</span></div>
+                <span class="dots">•••</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <button class="mobile-menu" onclick="toggleSidebar()">☰</button>
+            <div class="breadcrumb"><span>CareTrack</span><b>/</b><strong>{% block page_name %}Dashboard{% endblock %}</strong></div>
+            <div class="top-actions">
+                <div class="live-pill"><i></i> System operational</div>
+                <button class="icon-btn">⌕</button>
+                <button class="icon-btn notification">♢<em></em></button>
+                <div class="top-avatar">KS</div>
+            </div>
+        </header>
+
+        <section class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="toast {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

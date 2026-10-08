@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+caretrack.db
+.pytest_cache/
+.vscode/

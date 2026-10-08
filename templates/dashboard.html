@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}CareTrack · Dashboard{% endblock %}
+{% block page_name %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">CLINIC OVERVIEW · {{ today }}</div>
+        <h1>Good morning, Admin <span>✦</span></h1>
+        <p>Here's what's happening across your clinic today.</p>
+    </div>
+    <div class="heading-actions">
+        <form method="POST" action="{{ url_for('reset_demo') }}">
+            <button class="secondary-btn" type="submit">↻ Reset demo</button>
+        </form>
+        <a class="primary-btn" href="{{ url_for('appointments') }}">＋ New appointment</a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card featured">
+        <div class="stat-top"><span class="stat-icon purple">◉</span><span class="trend positive">↑ 12.5%</span></div>
+        <span class="stat-label">Total appointments</span>
+        <strong>{{ stats.total }}</strong>
+        <div class="mini-progress"><span style="width:78%"></span></div>
+        <small>78% of daily capacity</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon green">✓</span><span class="trend positive">On track</span></div>
+        <span class="stat-label">Completed</span>
+        <strong>{{ stats.completed }}</strong>
+        <small>Patients successfully served</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon amber">◷</span><span class="trend neutral">Live</span></div>
+        <span class="stat-label">Waiting now</span>
+        <strong>{{ stats.waiting + stats.delayed }}</strong>
+        <small>Avg. wait <b>{{ stats.avg_wait }} min</b></small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon blue">✦</span><span class="trend positive">Optimal</span></div>
+        <span class="stat-label">Doctor availability</span>
+        <strong>83%</strong>
+        <small>5 of 6 consultation rooms active</small>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <section class="panel chart-panel">
+        <div class="panel-head">
+            <div><span class="panel-kicker">PATIENT FLOW</span><h2>Today's appointments</h2></div>
+            <select id="chartRange"><option>Today</option><option>This week</option></select>
+        </div>
+        <div class="chart-wrap"><canvas id="flowChart"></canvas></div>
+        <div class="chart-footer">
+            <span><i class="legend-dot completed"></i> Completed</span>
+            <span><i class="legend-dot waiting"></i> Waiting</span>
+            <span><i class="legend-dot upcoming"></i> Upcoming</span>
+            <strong>Peak: 10:00 AM</strong>
+        </div>
+    </section>
+
+    <section class="panel prediction-panel">
+        <div class="panel-head">
+            <div><span class="panel-kicker">SMART ESTIMATE</span><h2>Waiting time</h2></div>
+            <span class="ai-chip">✦ Smart</span>
+        </div>
+        <div class="prediction-number">{{ stats.avg_wait }}<small>min</small></div>
+        <p class="prediction-copy">Estimated average waiting time based on today's active queue.</p>
+        <div class="prediction-meter"><span style="width:{{ [stats.avg_wait * 3, 100] | min }}%"></span></div>
+        <div class="prediction-meta"><span>Target &lt; 20 min</span><strong>{{ "Within target" if stats.avg_wait < 20 else "Needs attention" }}</strong></div>
+        <div class="prediction-note"><span>✦</span> Queue conditions are currently stable.</div>
+    </section>
+</div>
+
+<div class="lower-grid">
+    <section class="panel appointments-panel">
+        <div class="panel-head">
+            <div><span class="panel-kicker">LIVE QUEUE</span><h2>Today's appointments</h2></div>
+            <a class="text-link" href="{{ url_for('appointments') }}">View all →</a>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>PATIENT</th><th>DOCTOR</th><th>TIME</th><th>STATUS</th><th>WAIT</th></tr></thead>
+                <tbody>
+                {% for a in appointments %}
+                <tr>
+                    <td><div class="patient"><span class="patient-avatar avatar-{{ loop.index }}">{{ a.patient[0] }}</span><div><strong>{{ a.patient }}</strong><small>{{ a.token }}</small></div></div></td>
+                    <td><span class="doctor-name">{{ a.doctor }}</span><small class="table-sub">{{ a.department }}</small></td>
+                    <td><strong>{{ a.time }}</strong></td>
+                    <td><span class="status {{ a.status|lower }}">{{ a.status }}</span></td>
+                    <td><span class="wait">{{ a.wait_minutes }} min</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel doctors-panel">
+        <div class="panel-head"><div><span class="panel-kicker">CARE TEAM</span><h2>Doctor status</h2></div><span class="online-count">● 3 active</span></div>
+        {% for d in doctors %}
+        <div class="doctor-row">
+            <div class="doctor-avatar {{ d.color }}">{{ d.name.split(' ')[1][0] }}{{ d.name.split(' ')[2][0] }}</div>
+            <div class="doctor-info"><strong>{{ d.name }}</strong><span>{{ d.specialty }}</span></div>
+            <div class="doctor-right"><span class="doctor-status {{ 'available' if d.status == 'Available' else 'consulting' }}">{{ d.status }}</span><small>{{ d.patients }} patients</small></div>
+        </div>
+        {% endfor %}
+        <div class="team-footer"><span>Next availability</span><strong>Dr. Arjun Rao · 11:45 AM</strong></div>
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const ctx = document.getElementById('flowChart');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['8 AM','9 AM','10 AM','11 AM','12 PM','1 PM','2 PM','3 PM'],
+        datasets: [
+            {label:'Appointments', data:[2,6,9,7,8,5,7,4], borderColor:'#7c5cff', backgroundColor:'rgba(124,92,255,.10)', fill:true, tension:.42, pointRadius:0, borderWidth:3},
+            {label:'Completed', data:[0,2,4,5,6,4,5,3], borderColor:'#28c7a7', fill:false, tension:.42, pointRadius:0, borderWidth:2}
+        ]
+    },
+    options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+            x:{grid:{display:false}, border:{display:false}, ticks:{color:'#8b8fa3', font:{family:'DM Sans'}}},
+            y:{beginAtZero:true, suggestedMax:10, grid:{color:'rgba(120,120,150,.10)'}, border:{display:false}, ticks:{color:'#8b8fa3', stepSize:2}}
+        }
+    }
+});
+</script>
+{% endblock %}
